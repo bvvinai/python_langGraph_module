@@ -29,5 +29,14 @@ class HealthResponse(BaseModel):
     service: str
 
 
+class ProviderInfo(BaseModel):
+    name: str
+
+
+class ProviderListResponse(BaseModel):
+    default_provider: str
+    providers: list[ProviderInfo]
+
+
 def new_trace_id() -> str:
     return str(uuid4())

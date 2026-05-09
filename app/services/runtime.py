@@ -10,9 +10,14 @@ from app.services.orchestrator import AIOrchestrator
 
 
 @lru_cache(maxsize=1)
-def get_orchestrator() -> AIOrchestrator:
+def get_provider_factory() -> ProviderFactory:
     settings = get_settings()
     registry = load_provider_registry(settings.providers_config_path)
-    provider_factory = ProviderFactory(registry=registry, default_provider=settings.default_provider)
+    return ProviderFactory(registry=registry, default_provider=settings.default_provider)
+
+
+@lru_cache(maxsize=1)
+def get_orchestrator() -> AIOrchestrator:
+    provider_factory = get_provider_factory()
     graph_runner = AIGraphRunner(provider_factory=provider_factory)
     return AIOrchestrator(graph_runner=graph_runner)

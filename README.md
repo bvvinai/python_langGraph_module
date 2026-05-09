@@ -39,14 +39,56 @@ uvicorn app.main:app --reload
 
 Provider definitions are in `config/providers.json`.
 
-- `type = "mock"` for local deterministic responses.
+- `type = "anthropic"` for Anthropic Messages API (`/v1/messages`).
 - `type = "openai_compatible"` for OpenAI-style APIs (`/v1/chat/completions`) including many self-hosted or vendor gateways.
+- `type = "ollama"` for local/self-hosted Ollama (`/api/chat`).
+
+Config supports env placeholders like `${ANTHROPIC_BASE_URL}`, `${OPENAI_BASE_URL}`, and `${OLLAMA_BASE_URL}`.
 
 To add a new AI system, usually you only need to:
 
 1. Add a provider entry in `config/providers.json`.
 2. Set required API key env var.
 3. Optionally create a dedicated provider class if API is not OpenAI-compatible.
+
+## Switch providers anytime
+
+1. See available providers:
+
+```bash
+curl "http://127.0.0.1:8000/v1/ai/providers"
+```
+
+2. Call any provider per request by changing `provider`:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": "Explain this in one sentence.",
+    "provider": "anthropic"
+  }'
+```
+
+```bash
+curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": "Explain this in one sentence.",
+    "provider": "openai"
+  }'
+```
+
+```bash
+curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": "Explain this in one sentence.",
+    "provider": "ollama"
+  }'
+```
+
+3. Change global default in `.env` via `DEFAULT_PROVIDER`.
 
 ## Example request
 
@@ -56,7 +98,7 @@ curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
   -d '{
     "input": "Summarize LangGraph in one line.",
     "system_prompt": "You are concise.",
-    "provider": "mock"
+    "provider": "openai"
   }'
 ```
 

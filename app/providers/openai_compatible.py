@@ -48,11 +48,12 @@ class OpenAICompatibleProvider(BaseProvider):
             raise ProviderAuthError(self.name)
 
         base_url = (self.config.base_url or "https://api.openai.com").rstrip("/")
-        url = f"{base_url}/v1/chat/completions"
+        endpoint_path = self.config.endpoint_path or "/v1/chat/completions"
+        url = f"{base_url}{endpoint_path}"
 
         headers = {"Content-Type": "application/json", **self.config.extra_headers}
         if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
+            headers["Authorization"] = f"{self.config.api_key_prefix} {api_key}"
 
         messages: list[dict[str, str]] = []
         if system_prompt:

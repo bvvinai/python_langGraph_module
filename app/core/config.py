@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     app_port: int = Field(default=8000, alias="APP_PORT")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
-    default_provider: str = Field(default="mock", alias="DEFAULT_PROVIDER")
+    default_provider: str = Field(default="openai", alias="DEFAULT_PROVIDER")
     providers_config_path: str = Field(default="config/providers.json", alias="PROVIDERS_CONFIG_PATH")
 
 
