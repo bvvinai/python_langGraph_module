@@ -1,0 +1,16 @@
+{
+  "providers": [
+    {
+      "name": "mock",
+      "type": "mock",
+      "default_model": "mock-v1"
+    },
+    {
+      "name": "openai",
+      "type": "openai_compatible",
+      "base_url": "https://api.openai.com",
+      "api_key_env": "OPENAI_API_KEY",
+      "default_model": "gpt-4o-mini"
+    }
+  ]
+}
