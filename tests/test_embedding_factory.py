@@ -4,13 +4,11 @@ import json
 from pathlib import Path
 
 from app.vectordb.embedding import HashEmbeddingModel, OllamaEmbeddingModel, OpenAICompatibleEmbeddingModel
-from app.vectordb.factory import VectorStoreFactory
+from app.vectordb.factory import build_vector_store
 from app.vectordb.qdrant import QdrantVectorStore
 
 
 class FakeSettings:
-    vector_db_enabled = True
-    vector_db_provider = "qdrant"
     vector_embedding_size = 128
 
     qdrant_url = "http://qdrant:6333"
@@ -59,8 +57,7 @@ def test_factory_uses_hash_embedding_by_default(tmp_path: Path) -> None:
     settings = FakeSettings()
     settings.embeddings_config_path = str(config_path)
 
-    factory = VectorStoreFactory(settings)
-    store = factory.get()
+    store = build_vector_store(settings)
 
     assert isinstance(store, QdrantVectorStore)
     assert isinstance(store.embedding_model, HashEmbeddingModel)
@@ -73,8 +70,7 @@ def test_factory_can_use_openai_compatible_embedding(tmp_path: Path) -> None:
     settings.embeddings_config_path = str(config_path)
     settings.embedding_profile = "openai-small"
 
-    factory = VectorStoreFactory(settings)
-    store = factory.get()
+    store = build_vector_store(settings)
 
     assert isinstance(store, QdrantVectorStore)
     assert isinstance(store.embedding_model, OpenAICompatibleEmbeddingModel)
@@ -87,8 +83,7 @@ def test_factory_can_use_ollama_embedding(tmp_path: Path) -> None:
     settings.embeddings_config_path = str(config_path)
     settings.embedding_profile = "ollama-nomic"
 
-    factory = VectorStoreFactory(settings)
-    store = factory.get()
+    store = build_vector_store(settings)
 
     assert isinstance(store, QdrantVectorStore)
     assert isinstance(store.embedding_model, OllamaEmbeddingModel)

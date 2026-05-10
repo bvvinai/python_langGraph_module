@@ -8,7 +8,7 @@ from app.domain.ports import VectorStore
 from app.providers.factory import ProviderFactory
 from app.providers.registry import load_provider_registry
 from app.services.orchestrator import AIOrchestrator
-from app.vectordb.factory import VectorStoreFactory
+from app.vectordb.factory import build_vector_store
 
 
 @lru_cache(maxsize=1)
@@ -21,7 +21,7 @@ def get_provider_factory() -> ProviderFactory:
 @lru_cache(maxsize=1)
 def get_vector_store() -> VectorStore:
     settings = get_settings()
-    return VectorStoreFactory(settings).get()
+    return build_vector_store(settings)
 
 
 @lru_cache(maxsize=1)

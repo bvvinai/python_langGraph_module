@@ -1,14 +1,38 @@
-﻿# app/vectordb
+﻿```mermaid
+flowchart TD
+    A[Start: App Requests Vector Store] --> B[build_vector_store]
+    B --> C[_build_embedding_model]
+    C -->|Profile Exists| D[_build_embedding_model_from_profile]
+    C -->|Legacy Settings| E[_build_embedding_model_from_legacy_settings]
+    D --> F[EmbeddingModel\nOpenAICompatibleEmbeddingModel\nOllamaEmbeddingModel\nHashEmbeddingModel]
+    E --> F
+    F --> G[QdrantVectorStore]
 
-Vector database abstractions, embedding backends, and concrete vector store implementations.
+    %% Upsert flow
+    G -.-> H[upsert_documents]
+    H --> I[EmbeddingModel.embed]
+    I --> J[QdrantVectorStore._ensure_collection]
+    J --> K[Qdrant API: Upsert]
+    K --> L[End: Returns upserted count]
+
+    %% Search flow
+    G -.-> M[search]
+    M --> N[EmbeddingModel.embed]
+    N --> O[Qdrant API: Search]
+    O --> P[End: Returns RetrievedChunk list]
+```
+
+# app/vectordb
+
+Vector database abstractions, embedding backends, and Qdrant vector store implementation.
 
 ## Files
 
 ### __init__.py
-Exports vector DB factory.
+Exports the vector store builder function.
 
 Top-level symbols:
-- VectorStoreFactory
+- build_vector_store
 
 ### embedding.py
 Embedding protocol and backends.
@@ -52,46 +76,29 @@ Embedding protocol and backends.
     - Doc: Calls Ollama API to get embedding.
 
 ### factory.py
-Builds vector store and embedding backend from settings/profile.
+Builds a QdrantVectorStore and embedding backend from settings/profile.
 
-#### Classes and Functions
+#### Functions
 
-- **VectorStoreFactory**
-  - `__init__(settings: Settings)`
-    - Input: settings (Settings), app config.
-    - Output: None
-    - Doc: Stores settings and loads embedding registry.
-  - `get() -> VectorStore`
-    - Input: None
-    - Output: VectorStore instance (Qdrant or Noop)
-    - Doc: Returns singleton vector store instance based on config.
-  - `_build_embedding_model() -> EmbeddingModel`
-    - Input: None
-    - Output: EmbeddingModel instance
-    - Doc: Selects embedding model from profile or legacy config.
-  - `_build_embedding_model_from_profile(profile: EmbeddingConfig) -> EmbeddingModel`
-    - Input: profile (EmbeddingConfig)
-    - Output: EmbeddingModel instance
-    - Doc: Instantiates embedding model from profile.
-  - `_build_embedding_model_from_legacy_settings() -> EmbeddingModel`
-    - Input: None
-    - Output: EmbeddingModel instance
-    - Doc: Instantiates embedding model from legacy config.
+- **build_vector_store(settings: Settings) -> QdrantVectorStore**
+  - Input: settings (Settings), app config.
+  - Output: QdrantVectorStore instance.
+  - Doc: Builds and returns a configured QdrantVectorStore with the appropriate embedding model.
 
-### noop.py
-No-op vector store fallback.
+- **_build_embedding_model(settings: Settings) -> EmbeddingModel**
+  - Input: settings (Settings)
+  - Output: EmbeddingModel instance
+  - Doc: Selects embedding model from profile or legacy config.
 
-#### Classes and Functions
+- **_build_embedding_model_from_profile(profile: EmbeddingConfig, settings: Settings) -> EmbeddingModel**
+  - Input: profile (EmbeddingConfig), settings (Settings)
+  - Output: EmbeddingModel instance
+  - Doc: Instantiates embedding model from profile.
 
-- **NoopVectorStore**
-  - `async upsert_documents(collection: str, documents: list[VectorDocument]) -> int`
-    - Input: collection (str), documents (list)
-    - Output: 0
-    - Doc: No-op, always returns 0.
-  - `async search(collection: str, query: str, limit: int, score_threshold: float | None) -> list`
-    - Input: Query params
-    - Output: Empty list
-    - Doc: No-op, always returns empty list.
+- **_build_embedding_model_from_legacy_settings(settings: Settings) -> EmbeddingModel**
+  - Input: settings (Settings)
+  - Output: EmbeddingModel instance
+  - Doc: Instantiates embedding model from legacy config.
 
 ### qdrant.py
 Qdrant-backed vector store implementation.
