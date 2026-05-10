@@ -1,17 +1,36 @@
 # LangGraph + FastAPI Production Starter
 
-A provider-agnostic, production-structured Python template that lets you plug in almost any AI backend with minimal changes.
+Provider-agnostic FastAPI and LangGraph starter for building production-ready AI APIs with pluggable providers and vector retrieval.
 
-## Why this template
+## Overview
 
-- Provider-agnostic architecture via a strict provider port (`LLMProvider`) and registry config.
-- LangGraph orchestration with clear node boundaries.
-- FastAPI API layer separated from orchestration and provider implementations.
-- Designed for extension: new providers, new graph nodes, new endpoints.
+### Architecture Highlights
 
-## Quick start
+- Provider-agnostic design via `LLMProvider` protocol and provider registry.
+- LangGraph orchestration with explicit node boundaries.
+- FastAPI API layer separated from orchestration and provider adapters.
+- Extensible modules for providers, graph nodes, and vector DB backends.
 
-1. Create virtual environment and install dependencies:
+### Project Structure
+
+```text
+app/
+  api/
+  core/
+  domain/
+  graphs/
+  providers/
+  services/
+  vectordb/
+config/
+  providers.json
+  embeddings.json
+tests/
+```
+
+## Quick Start
+
+### 1. Create environment and install dependencies
 
 ```bash
 python -m venv .venv
@@ -19,78 +38,51 @@ python -m venv .venv
 pip install -e .[dev]
 ```
 
-2. Copy and edit environment variables:
+### 2. Configure environment
 
 ```bash
 copy .env.example .env
 ```
 
-3. Run API:
+Edit `.env` values as needed.
+
+### 3. Run API
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-4. Open docs:
+### 4. Open API docs
 
 - `http://127.0.0.1:8000/docs`
 
-## Provider setup
+## Provider Configuration
 
-Provider definitions are in `config/providers.json`.
+Provider definitions are loaded from `config/providers.json`.
 
-- `type = "anthropic"` for Anthropic Messages API (`/v1/messages`).
-- `type = "openai_compatible"` for OpenAI-style APIs (`/v1/chat/completions`) including many self-hosted or vendor gateways.
-- `type = "ollama"` for local/self-hosted Ollama (`/api/chat`).
+### Supported provider types
 
-Config supports env placeholders like `${ANTHROPIC_BASE_URL}`, `${OPENAI_BASE_URL}`, and `${OLLAMA_BASE_URL}`.
+- `anthropic`: Anthropic Messages API (`/v1/messages`).
+- `openai_compatible`: OpenAI-style chat completions (`/v1/chat/completions`).
+- `ollama`: Ollama chat API (`/api/chat`).
 
-To add a new AI system, usually you only need to:
+Config files support environment placeholders such as `${ANTHROPIC_BASE_URL}`, `${OPENAI_BASE_URL}`, and `${OLLAMA_BASE_URL}`.
 
-1. Add a provider entry in `config/providers.json`.
-2. Set required API key env var.
-3. Optionally create a dedicated provider class if API is not OpenAI-compatible.
+### Add or change providers
 
-## Switch providers anytime
+1. Add or edit provider entries in `config/providers.json`.
+2. Set required API key environment variables.
+3. Optionally add a dedicated adapter class if the API is not OpenAI-compatible.
 
-1. See available providers:
+## API Usage
+
+### List providers
 
 ```bash
 curl "http://127.0.0.1:8000/v1/ai/providers"
 ```
 
-2. Call any provider per request by changing `provider`:
-
-```bash
-curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input": "Explain this in one sentence.",
-    "provider": "anthropic"
-  }'
-```
-
-```bash
-curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input": "Explain this in one sentence.",
-    "provider": "openai"
-  }'
-```
-
-```bash
-curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input": "Explain this in one sentence.",
-    "provider": "ollama"
-  }'
-```
-
-3. Change global default in `.env` via `DEFAULT_PROVIDER`.
-
-## Example request
+### Invoke model
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
@@ -102,19 +94,23 @@ curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
   }'
 ```
 
-## Vector DB (Qdrant) integration
+Change `provider` to switch backends per request.
 
-The app now includes a built-in vector retrieval step in the LangGraph workflow:
+Set global default provider in `.env` via `DEFAULT_PROVIDER`.
+
+## Vector DB Integration (Qdrant)
+
+Workflow with retrieval:
 
 `prepare -> retrieve_context -> call_model -> finalize`
 
-Run with Docker Compose to start both API and Qdrant:
+### Run with Docker Compose
 
 ```bash
 docker compose up --build
 ```
 
-Index documents:
+### Upsert documents
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/v1/ai/vector/upsert" \
@@ -131,13 +127,13 @@ curl -X POST "http://127.0.0.1:8000/v1/ai/vector/upsert" \
   }'
 ```
 
-Check active vector and embedding runtime config:
+### Read runtime vector and embedding config
 
 ```bash
 curl "http://127.0.0.1:8000/v1/ai/vector/config"
 ```
 
-Invoke with retrieval:
+### Invoke with retrieval enabled
 
 ```bash
 curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
@@ -153,21 +149,23 @@ curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
   }'
 ```
 
-Environment variables:
+### Vector settings
 
 - `VECTOR_DB_ENABLED=true`
 - `VECTOR_DB_PROVIDER=qdrant`
 - `VECTOR_DB_DEFAULT_COLLECTION=knowledge_base`
 - `QDRANT_URL=http://qdrant:6333`
 
-Embedding backend (flexible):
+## Embedding Configuration
+
+Embedding profiles are loaded from `config/embeddings.json`.
+
+### Key environment values
 
 - `EMBEDDINGS_CONFIG_PATH=config/embeddings.json`
 - `EMBEDDING_PROFILE=hash-local`
 
-Defined embedding profiles live in `config/embeddings.json`.
-
-Example profiles included:
+### Included profiles
 
 - `hash-local`
 - `openai-text-embedding-3-small`
@@ -175,28 +173,13 @@ Example profiles included:
 - `ollama-nomic-embed-text`
 - `ollama-mxbai-embed-large`
 
-To switch embedding model, only change `EMBEDDING_PROFILE`.
+Switch embedding behavior by changing only `EMBEDDING_PROFILE`.
 
-Legacy env-based embedding settings are still supported as fallback when profile lookup fails.
+Legacy env-based embedding values remain available as fallback if profile lookup fails.
 
-## Project structure
+## Production Notes
 
-```text
-app/
-  api/
-  core/
-  domain/
-  graphs/
-  providers/
-  services/
-config/
-  providers.json
-tests/
-```
-
-## Production notes
-
-- Wire your preferred authN/authZ middleware in `app/main.py`.
-- Add tracing/metrics backend in observability middleware.
-- Run behind a production ASGI server setup (gunicorn+uvicorn workers or orchestrator-managed replicas).
-- Add CI for lint, type-check, tests.
+- Add authN/authZ middleware in `app/main.py`.
+- Add tracing and metrics integration in middleware.
+- Deploy behind production ASGI setup (for example gunicorn with uvicorn workers).
+- Add CI checks for lint, type checks, and tests.
