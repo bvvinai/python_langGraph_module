@@ -102,6 +102,83 @@ curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
   }'
 ```
 
+## Vector DB (Qdrant) integration
+
+The app now includes a built-in vector retrieval step in the LangGraph workflow:
+
+`prepare -> retrieve_context -> call_model -> finalize`
+
+Run with Docker Compose to start both API and Qdrant:
+
+```bash
+docker compose up --build
+```
+
+Index documents:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/v1/ai/vector/upsert" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collection": "knowledge_base",
+    "documents": [
+      {
+        "id": "doc-1",
+        "text": "LangGraph is used to build stateful LLM workflows.",
+        "metadata": {"source": "docs"}
+      }
+    ]
+  }'
+```
+
+Check active vector and embedding runtime config:
+
+```bash
+curl "http://127.0.0.1:8000/v1/ai/vector/config"
+```
+
+Invoke with retrieval:
+
+```bash
+curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": "What is LangGraph used for?",
+    "provider": "openai",
+    "retrieval": {
+      "enabled": true,
+      "collection": "knowledge_base",
+      "top_k": 3
+    }
+  }'
+```
+
+Environment variables:
+
+- `VECTOR_DB_ENABLED=true`
+- `VECTOR_DB_PROVIDER=qdrant`
+- `VECTOR_DB_DEFAULT_COLLECTION=knowledge_base`
+- `QDRANT_URL=http://qdrant:6333`
+
+Embedding backend (flexible):
+
+- `EMBEDDINGS_CONFIG_PATH=config/embeddings.json`
+- `EMBEDDING_PROFILE=hash-local`
+
+Defined embedding profiles live in `config/embeddings.json`.
+
+Example profiles included:
+
+- `hash-local`
+- `openai-text-embedding-3-small`
+- `openai-text-embedding-3-large`
+- `ollama-nomic-embed-text`
+- `ollama-mxbai-embed-large`
+
+To switch embedding model, only change `EMBEDDING_PROFILE`.
+
+Legacy env-based embedding settings are still supported as fallback when profile lookup fails.
+
 ## Project structure
 
 ```text

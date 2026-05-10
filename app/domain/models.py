@@ -5,6 +5,15 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
+from app.domain.ports import RetrievedChunk, VectorDocument
+
+
+class RetrievalConfig(BaseModel):
+    enabled: bool = False
+    collection: str | None = None
+    top_k: int = Field(default=4, ge=1, le=20)
+    score_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
+
 
 class AIInvokeRequest(BaseModel):
     input: str = Field(min_length=1, description="Primary user input")
@@ -14,6 +23,7 @@ class AIInvokeRequest(BaseModel):
     temperature: float = Field(default=0.2, ge=0.0, le=2.0)
     max_tokens: int | None = Field(default=None, gt=0)
     metadata: dict[str, Any] = Field(default_factory=dict)
+    retrieval: RetrievalConfig | None = None
 
 
 class AIInvokeResponse(BaseModel):
@@ -22,6 +32,31 @@ class AIInvokeResponse(BaseModel):
     model: str | None = None
     trace_id: str
     raw: dict[str, Any] | None = None
+    retrieved_context: list[RetrievedChunk] = Field(default_factory=list)
+
+
+class VectorUpsertRequest(BaseModel):
+    collection: str | None = None
+    documents: list[VectorDocument] = Field(default_factory=list)
+
+
+class VectorUpsertResponse(BaseModel):
+    collection: str
+    upserted: int
+
+
+class VectorRuntimeConfigResponse(BaseModel):
+    vector_db_enabled: bool
+    vector_db_provider: str
+    vector_db_default_collection: str
+    qdrant_url: str
+    embeddings_config_path: str
+    embedding_profile: str
+    available_embedding_profiles: list[str]
+    embedding_provider: str
+    embedding_model: str
+    embedding_base_url: str
+    embedding_endpoint_path: str
 
 
 class HealthResponse(BaseModel):

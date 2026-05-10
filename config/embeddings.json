@@ -1,0 +1,39 @@
+{
+  "embeddings": [
+    {
+      "name": "hash-local",
+      "type": "hash",
+      "vector_size": 256
+    },
+    {
+      "name": "openai-text-embedding-3-small",
+      "type": "openai_compatible",
+      "base_url": "${OPENAI_BASE_URL}",
+      "api_key_env": "OPENAI_API_KEY",
+      "endpoint_path": "/v1/embeddings",
+      "model": "text-embedding-3-small"
+    },
+    {
+      "name": "openai-text-embedding-3-large",
+      "type": "openai_compatible",
+      "base_url": "${OPENAI_BASE_URL}",
+      "api_key_env": "OPENAI_API_KEY",
+      "endpoint_path": "/v1/embeddings",
+      "model": "text-embedding-3-large"
+    },
+    {
+      "name": "ollama-nomic-embed-text",
+      "type": "ollama",
+      "base_url": "${OLLAMA_BASE_URL}",
+      "endpoint_path": "/api/embeddings",
+      "model": "nomic-embed-text"
+    },
+    {
+      "name": "ollama-mxbai-embed-large",
+      "type": "ollama",
+      "base_url": "${OLLAMA_BASE_URL}",
+      "endpoint_path": "/api/embeddings",
+      "model": "mxbai-embed-large"
+    }
+  ]
+}

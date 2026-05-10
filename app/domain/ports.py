@@ -11,6 +11,19 @@ class ProviderOutput(BaseModel):
     raw: dict[str, Any] = Field(default_factory=dict)
 
 
+class VectorDocument(BaseModel):
+    id: str | None = None
+    text: str = Field(min_length=1)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class RetrievedChunk(BaseModel):
+    id: str
+    text: str
+    score: float
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 @runtime_checkable
 class LLMProvider(Protocol):
     name: str
@@ -25,3 +38,22 @@ class LLMProvider(Protocol):
         max_tokens: int | None,
         metadata: dict[str, Any],
     ) -> ProviderOutput: ...
+
+
+@runtime_checkable
+class VectorStore(Protocol):
+    async def upsert_documents(
+        self,
+        *,
+        collection: str,
+        documents: list[VectorDocument],
+    ) -> int: ...
+
+    async def search(
+        self,
+        *,
+        collection: str,
+        query: str,
+        limit: int,
+        score_threshold: float | None,
+    ) -> list[RetrievedChunk]: ...
