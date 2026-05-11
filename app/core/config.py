@@ -25,14 +25,14 @@ class Settings(BaseSettings):
     rag_mode: str = Field(default="graph_rag", alias="RAG_MODE")
 
     embeddings_config_path: str = Field(default="config/embeddings.json", alias="EMBEDDINGS_CONFIG_PATH")
-    embedding_profile: str = Field(default="hash-local", alias="EMBEDDING_PROFILE")
+    embedding_profile: str = Field(default="ollama-nomic-embed-text", alias="EMBEDDING_PROFILE")
 
     qdrant_url: str = Field(default="http://qdrant:6333", alias="QDRANT_URL")
     qdrant_api_key_env: str | None = Field(default="QDRANT_API_KEY", alias="QDRANT_API_KEY_ENV")
     qdrant_timeout_seconds: float = Field(default=10.0, alias="QDRANT_TIMEOUT_SECONDS")
     qdrant_distance: str = Field(default="Cosine", alias="QDRANT_DISTANCE")
 
-    graph_db_enabled: bool = Field(default=False, alias="GRAPH_DB_ENABLED")
+    graph_db_enabled: bool = Field(default=True, alias="GRAPH_DB_ENABLED")
     graph_db_provider: str = Field(default="neo4j", alias="GRAPH_DB_PROVIDER")
     neo4j_uri: str = Field(default="bolt://neo4j:7687", alias="NEO4J_URI")
     neo4j_username: str = Field(default="neo4j", alias="NEO4J_USERNAME")
