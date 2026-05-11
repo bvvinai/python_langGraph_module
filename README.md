@@ -58,6 +58,78 @@ uvicorn app.main:app --reload
 
 ## Provider Configuration
 
+
+## Project Flow Diagram
+
+Below is a comprehensive flow diagram showing how all major modules, functions, and workflows are interrelated in this project:
+
+```mermaid
+flowchart TD
+  subgraph API Layer
+    A1[FastAPI app.main]
+    A2[API Router app/api/v1/router.py]
+    A3[AI Endpoint /ai app/api/v1/endpoints/ai.py]
+    A4[Health Endpoint /health]
+  end
+  subgraph Service Layer
+    S1[Orchestrator app/services/orchestrator.py]
+    S2[Runtime Providers app/services/runtime.py]
+  end
+  subgraph Graph Layer
+    G1[Graph Runner app/graphs/builder.py]
+    G2[Graph Nodes app/graphs/nodes.py]
+    G3[Graph State app/graphs/state.py]
+  end
+  subgraph Providers
+    P1[Provider Factory app/providers/factory.py]
+    P2[Base Provider app/providers/base.py]
+    P3[Anthropic, OpenAI, Ollama, etc.]
+  end
+  subgraph VectorDB
+    V1[Vector Store Factory app/vectordb/factory.py]
+    V2[Qdrant Vector Store]
+  end
+  subgraph GraphDB
+    D1[Graph Store Factory app/graphdb/factory.py]
+    D2[Neo4j Graph Store]
+  end
+  subgraph Domain Models
+    M1[AIInvokeRequest, AIInvokeResponse, etc.]
+    M2[Ports: LLMProvider, VectorStore, GraphStore]
+  end
+  %% API Flow
+  A1 --> A2
+  A2 --> A3
+  A3 -->|invoke_ai| S1
+  A3 -->|list_providers| P1
+  S1 -->|invoke| G1
+  S1 -->|get_provider_factory| P1
+  S1 -->|get_vector_store| V1
+  S1 -->|get_graph_store| D1
+  G1 --> G2
+  G1 --> G3
+  G2 -->|prepare, retrieve_context, call_model, finalize| G3
+  G2 -->|call_model| P1
+  G2 -->|retrieve_context| V1
+  G2 -->|graph_rag| D1
+  P1 --> P2
+  P1 --> P3
+  V1 --> V2
+  D1 --> D2
+  %% Models
+  A3 --> M1
+  S1 --> M1
+  G1 --> M1
+  G2 --> M1
+  P2 --> M2
+  V1 --> M2
+  D1 --> M2
+  %% Data Flow
+  M1 -.->|input| A3
+  G2 -.->|output| M1
+    
+```
+
 Provider definitions are loaded from `config/providers.json`.
 
 ### Supported provider types
