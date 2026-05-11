@@ -15,7 +15,7 @@ from app.domain.models import (
 from app.domain.ports import VectorStore
 from app.providers.factory import ProviderFactory
 from app.services.orchestrator import AIOrchestrator
-from app.services.runtime import get_orchestrator, get_provider_factory, get_vector_store
+from app.services.runtime import get_graph_store, get_orchestrator, get_provider_factory, get_vector_store
 from app.vectordb.registry import load_embedding_registry
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -47,6 +47,15 @@ async def upsert_vector_documents(
     settings = get_settings()
     collection = request.collection or settings.vector_db_default_collection
     upserted = await vector_store.upsert_documents(collection=collection, documents=request.documents)
+
+    graph_store = get_graph_store()
+    if graph_store is not None and request.documents:
+        try:
+            await graph_store.upsert_documents(collection=collection, documents=request.documents)
+        except Exception:
+            # Graph ingestion is best-effort to avoid failing successful vector upserts.
+            pass
+
     return VectorUpsertResponse(collection=collection, upserted=upserted)
 
 
@@ -59,10 +68,14 @@ async def get_vector_runtime_config() -> VectorRuntimeConfigResponse:
     selected = next((item for item in enabled_profiles if item.name == settings.embedding_profile), None)
 
     return VectorRuntimeConfigResponse(
+        rag_mode=settings.rag_mode,
         vector_db_enabled=settings.vector_db_enabled,
         vector_db_provider=settings.vector_db_provider,
         vector_db_default_collection=settings.vector_db_default_collection,
         qdrant_url=settings.qdrant_url,
+        graph_db_enabled=settings.graph_db_enabled,
+        graph_db_provider=settings.graph_db_provider,
+        neo4j_uri=settings.neo4j_uri,
         embeddings_config_path=settings.embeddings_config_path,
         embedding_profile=settings.embedding_profile,
         available_embedding_profiles=available_profiles,

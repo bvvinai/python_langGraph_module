@@ -24,6 +24,7 @@ class AIInvokeRequest(BaseModel):
     max_tokens: int | None = Field(default=None, gt=0)
     metadata: dict[str, Any] = Field(default_factory=dict)
     retrieval: RetrievalConfig | None = None
+    rag_mode: str | None = Field(default=None, description="rag or graph_rag")
 
 
 class AIInvokeResponse(BaseModel):
@@ -46,10 +47,14 @@ class VectorUpsertResponse(BaseModel):
 
 
 class VectorRuntimeConfigResponse(BaseModel):
+    rag_mode: str
     vector_db_enabled: bool
     vector_db_provider: str
     vector_db_default_collection: str
     qdrant_url: str
+    graph_db_enabled: bool
+    graph_db_provider: str
+    neo4j_uri: str
     embeddings_config_path: str
     embedding_profile: str
     available_embedding_profiles: list[str]

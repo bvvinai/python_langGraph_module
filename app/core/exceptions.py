@@ -21,3 +21,8 @@ class ProviderAuthError(AppError):
 class ProviderRequestError(AppError):
     def __init__(self, provider: str, message: str) -> None:
         super().__init__(f"Provider '{provider}' request failed: {message}", code="provider_request_error")
+
+
+class InvalidRagModeError(AppError):
+    def __init__(self, mode: str) -> None:
+        super().__init__(f"RAG mode '{mode}' is not supported.", code="invalid_rag_mode")

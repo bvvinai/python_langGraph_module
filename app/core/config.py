@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     vector_db_provider: str = Field(default="qdrant", alias="VECTOR_DB_PROVIDER")
     vector_db_default_collection: str = Field(default="knowledge_base", alias="VECTOR_DB_DEFAULT_COLLECTION")
     vector_embedding_size: int = Field(default=256, alias="VECTOR_EMBEDDING_SIZE")
+    rag_mode: str = Field(default="graph_rag", alias="RAG_MODE")
 
     embeddings_config_path: str = Field(default="config/embeddings.json", alias="EMBEDDINGS_CONFIG_PATH")
     embedding_profile: str = Field(default="hash-local", alias="EMBEDDING_PROFILE")
@@ -39,6 +40,14 @@ class Settings(BaseSettings):
     qdrant_api_key_env: str | None = Field(default="QDRANT_API_KEY", alias="QDRANT_API_KEY_ENV")
     qdrant_timeout_seconds: float = Field(default=10.0, alias="QDRANT_TIMEOUT_SECONDS")
     qdrant_distance: str = Field(default="Cosine", alias="QDRANT_DISTANCE")
+
+    graph_db_enabled: bool = Field(default=False, alias="GRAPH_DB_ENABLED")
+    graph_db_provider: str = Field(default="neo4j", alias="GRAPH_DB_PROVIDER")
+    neo4j_uri: str = Field(default="bolt://neo4j:7687", alias="NEO4J_URI")
+    neo4j_username: str = Field(default="neo4j", alias="NEO4J_USERNAME")
+    neo4j_password_env: str | None = Field(default="NEO4J_PASSWORD", alias="NEO4J_PASSWORD_ENV")
+    neo4j_database: str = Field(default="neo4j", alias="NEO4J_DATABASE")
+    graph_rag_max_neighbors: int = Field(default=10, alias="GRAPH_RAG_MAX_NEIGHBORS")
 
 
 @lru_cache(maxsize=1)

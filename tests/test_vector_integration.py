@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.domain.models import AIInvokeRequest, RetrievalConfig
-from app.domain.ports import ProviderOutput, RetrievedChunk, VectorDocument, VectorStore
+from app.domain.ports import GraphNeighborhood, ProviderOutput, RetrievedChunk, VectorDocument, VectorStore
 from app.graphs.builder import AIGraphRunner
 from app.main import create_app
 from app.services.runtime import get_vector_store
@@ -63,12 +63,24 @@ class FakeVectorStore(VectorStore):
         ]
 
 
+class FakeGraphStore:
+    async def upsert_documents(self, *, collection: str, documents: list[VectorDocument]) -> int:
+        return len(documents)
+
+    async def query_neighborhood(self, *, collection: str, query: str, limit: int) -> GraphNeighborhood:
+        return GraphNeighborhood(
+            entities=["LangGraph"],
+            facts=["LangGraph related_to StatefulWorkflow"],
+        )
+
+
 @pytest.mark.asyncio
 async def test_graph_runner_uses_retrieval_context() -> None:
     runner = AIGraphRunner(
         provider_factory=FakeProviderFactory(),
         vector_store=FakeVectorStore(),
         default_collection="knowledge_base",
+        default_rag_mode="rag",
     )
     request = AIInvokeRequest(
         input="What is LangGraph?",
@@ -80,6 +92,48 @@ async def test_graph_runner_uses_retrieval_context() -> None:
     assert "Retrieved context:" in response.output
     assert response.provider == "fake"
     assert len(response.retrieved_context) == 1
+
+
+@pytest.mark.asyncio
+async def test_graph_runner_uses_graph_rag_context() -> None:
+    runner = AIGraphRunner(
+        provider_factory=FakeProviderFactory(),
+        vector_store=FakeVectorStore(),
+        default_collection="knowledge_base",
+        default_rag_mode="graph_rag",
+        graph_store=FakeGraphStore(),
+    )
+    request = AIInvokeRequest(
+        input="How does LangGraph relate to workflows?",
+        retrieval=RetrievalConfig(enabled=True, top_k=1),
+        rag_mode="graph_rag",
+    )
+
+    response = await runner.run(request=request, trace_id="trace-graph")
+
+    assert "Graph context:" in response.output
+    assert "Retrieved context:" in response.output
+
+
+@pytest.mark.asyncio
+async def test_graph_runner_falls_back_to_rag_when_graph_store_missing() -> None:
+    runner = AIGraphRunner(
+        provider_factory=FakeProviderFactory(),
+        vector_store=FakeVectorStore(),
+        default_collection="knowledge_base",
+        default_rag_mode="graph_rag",
+        graph_store=None,
+    )
+    request = AIInvokeRequest(
+        input="How does LangGraph relate to workflows?",
+        retrieval=RetrievalConfig(enabled=True, top_k=1),
+        rag_mode="graph_rag",
+    )
+
+    response = await runner.run(request=request, trace_id="trace-fallback")
+
+    assert "Retrieved context:" in response.output
+    assert "Graph context:" not in response.output
 
 
 def test_vector_upsert_endpoint() -> None:

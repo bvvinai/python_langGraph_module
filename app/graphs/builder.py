@@ -3,15 +3,28 @@ from __future__ import annotations
 from langgraph.graph import END, StateGraph
 
 from app.domain.models import AIInvokeRequest, AIInvokeResponse
-from app.domain.ports import VectorStore
+from app.domain.ports import GraphStore, VectorStore
 from app.graphs.nodes import AINodes
 from app.graphs.state import AIState
 from app.providers.factory import ProviderFactory
 
 
 class AIGraphRunner:
-    def __init__(self, provider_factory: ProviderFactory, vector_store: VectorStore, default_collection: str) -> None:
-        self._nodes = AINodes(provider_factory, vector_store, default_collection)
+    def __init__(
+        self,
+        provider_factory: ProviderFactory,
+        vector_store: VectorStore,
+        default_collection: str,
+        default_rag_mode: str,
+        graph_store: GraphStore | None = None,
+    ) -> None:
+        self._nodes = AINodes(
+            provider_factory=provider_factory,
+            vector_store=vector_store,
+            default_collection=default_collection,
+            default_rag_mode=default_rag_mode,
+            graph_store=graph_store,
+        )
 
         workflow = StateGraph(AIState)
         workflow.add_node("prepare", self._nodes.prepare)

@@ -24,6 +24,19 @@ class RetrievedChunk(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class GraphEdge(BaseModel):
+    source: str
+    relation: str
+    target: str
+    weight: float = 1.0
+
+
+class GraphNeighborhood(BaseModel):
+    entities: list[str] = Field(default_factory=list)
+    edges: list[GraphEdge] = Field(default_factory=list)
+    facts: list[str] = Field(default_factory=list)
+
+
 @runtime_checkable
 class LLMProvider(Protocol):
     name: str
@@ -57,3 +70,21 @@ class VectorStore(Protocol):
         limit: int,
         score_threshold: float | None,
     ) -> list[RetrievedChunk]: ...
+
+
+@runtime_checkable
+class GraphStore(Protocol):
+    async def upsert_documents(
+        self,
+        *,
+        collection: str,
+        documents: list[VectorDocument],
+    ) -> int: ...
+
+    async def query_neighborhood(
+        self,
+        *,
+        collection: str,
+        query: str,
+        limit: int,
+    ) -> GraphNeighborhood: ...
