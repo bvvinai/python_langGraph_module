@@ -2,6 +2,23 @@
 
 Service layer for orchestration and runtime dependency wiring.
 
+## Folder Flow Chart
+
+```mermaid
+flowchart TD
+  S([Start]) --> A[FastAPI dependency resolution]
+  A --> B[get_provider_factory]
+  A --> C[get_vector_store]
+  A --> D[get_graph_store]
+  B --> E[get_orchestrator]
+  C --> E
+  D --> E
+  E --> F[AIOrchestrator.invoke]
+  F --> G[AIGraphRunner.run]
+  G --> H[AIInvokeResponse]
+  H --> Z([End])
+```
+
 ## Files
 
 ### __init__.py

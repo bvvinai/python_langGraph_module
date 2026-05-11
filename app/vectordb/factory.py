@@ -5,7 +5,6 @@ import os
 from app.core.config import Settings
 from app.vectordb.embedding import (
     EmbeddingModel,
-    HashEmbeddingModel,
     OllamaEmbeddingModel,
     OpenAICompatibleEmbeddingModel,
 )
@@ -67,4 +66,4 @@ def _build_embedding_model_from_profile(profile: EmbeddingConfig) -> EmbeddingMo
             endpoint_path=profile.endpoint_path or "/api/embeddings",
         )
 
-    return HashEmbeddingModel(size=profile.vector_size or 256)
+    raise RuntimeError(f"Profile '{profile.name}' has unsupported embedding type '{profile.type}'.")

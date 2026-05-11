@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends
 
 from app.core.config import get_settings
@@ -19,6 +21,7 @@ from app.services.runtime import get_graph_store, get_orchestrator, get_provider
 from app.vectordb.registry import load_embedding_registry
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/providers", response_model=ProviderListResponse)
@@ -54,7 +57,7 @@ async def upsert_vector_documents(
             await graph_store.upsert_documents(collection=collection, documents=request.documents)
         except Exception:
             # Graph ingestion is best-effort to avoid failing successful vector upserts.
-            pass
+            logger.exception("graph_upsert_failed", extra={"collection": collection})
 
     return VectorUpsertResponse(collection=collection, upserted=upserted)
 

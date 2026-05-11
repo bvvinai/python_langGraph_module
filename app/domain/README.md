@@ -2,6 +2,20 @@
 
 Domain models and protocol interfaces shared across layers.
 
+## Folder Flow Chart
+
+```mermaid
+flowchart TD
+  S([Start]) --> A[Incoming API Payload]
+  A --> B[models.py validation]
+  B --> C[AIInvokeRequest and RetrievalConfig]
+  C --> D[Graph and service layers]
+  D --> E[ports.py protocols]
+  E --> F[ProviderOutput and RetrievedChunk]
+  F --> G[AIInvokeResponse]
+  G --> Z([End])
+```
+
 ## Files
 
 ### __init__.py

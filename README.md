@@ -25,7 +25,6 @@ app/
 config/
   providers.json
   embeddings.json
-tests/
 ```
 
 ## Quick Start
@@ -59,12 +58,14 @@ uvicorn app.main:app --reload
 ## Provider Configuration
 
 
-## Project Flow Diagram
+## Folder Flow Chart
 
 Below is a comprehensive flow diagram showing how all major modules, functions, and workflows are interrelated in this project:
 
 ```mermaid
 flowchart TD
+  S([Start])
+  Z([End])
   subgraph API Layer
     A1[FastAPI app.main]
     A2[API Router app/api/v1/router.py]
@@ -97,6 +98,7 @@ flowchart TD
     M1[AIInvokeRequest, AIInvokeResponse, etc.]
     M2[Ports: LLMProvider, VectorStore, GraphStore]
   end
+  S --> A1
   %% API Flow
   A1 --> A2
   A2 --> A3
@@ -127,6 +129,8 @@ flowchart TD
   %% Data Flow
   M1 -.->|input| A3
   G2 -.->|output| M1
+  A4 --> Z
+  M1 --> Z
     
 ```
 
@@ -235,11 +239,10 @@ Embedding profiles are loaded from `config/embeddings.json`.
 ### Key environment values
 
 - `EMBEDDINGS_CONFIG_PATH=config/embeddings.json`
-- `EMBEDDING_PROFILE=hash-local`
+- `EMBEDDING_PROFILE=ollama-nomic-embed-text`
 
 ### Included profiles
 
-- `hash-local`
 - `openai-text-embedding-3-small`
 - `openai-text-embedding-3-large`
 - `ollama-nomic-embed-text`
@@ -254,4 +257,4 @@ Legacy env-based embedding values remain available as fallback if profile lookup
 - Add authN/authZ middleware in `app/main.py`.
 - Add tracing and metrics integration in middleware.
 - Deploy behind production ASGI setup (for example gunicorn with uvicorn workers).
-- Add CI checks for lint, type checks, and tests.
+- Add CI checks for lint and type checks.

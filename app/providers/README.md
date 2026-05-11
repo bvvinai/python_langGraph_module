@@ -2,6 +2,23 @@
 
 LLM provider adapters and provider factory/registry.
 
+## Folder Flow Chart
+
+```mermaid
+flowchart TD
+  S([Start]) --> A[providers.json]
+  A --> B[load_provider_registry]
+  B --> C[ProviderFactory]
+  C --> D{Provider Type}
+  D -->|anthropic| E[AnthropicProvider]
+  D -->|openai_compatible| F[OpenAICompatibleProvider]
+  D -->|ollama| G[OllamaProvider]
+  E --> H[ProviderOutput]
+  F --> H
+  G --> H
+  H --> Z([End])
+```
+
 ## Files
 
 ### __init__.py

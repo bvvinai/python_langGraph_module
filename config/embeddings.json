@@ -1,11 +1,6 @@
 {
   "embeddings": [
     {
-      "name": "hash-local",
-      "type": "hash",
-      "vector_size": 256
-    },
-    {
       "name": "openai-text-embedding-3-small",
       "type": "openai_compatible",
       "base_url": "${OPENAI_BASE_URL}",

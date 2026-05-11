@@ -2,6 +2,22 @@
 
 LangGraph workflow builder, nodes, and execution state.
 
+## Folder Flow Chart
+
+```mermaid
+flowchart TD
+  S([Start]) --> A[AIInvokeRequest]
+  A --> B[AIGraphRunner.run]
+  B --> C[prepare node]
+  C --> D[retrieve_context node]
+  D --> E[call_model node]
+  E --> F[finalize node]
+  F --> G[AIInvokeResponse]
+  D --> H[VectorStore.search]
+  E --> I[ProviderFactory.get and provider.generate]
+  G --> Z([End])
+```
+
 ## Files
 
 ### __init__.py

@@ -2,6 +2,23 @@
 
 Application source code organized by API, domain, orchestration, providers, and vector DB modules.
 
+## Folder Flow Chart
+
+```mermaid
+flowchart TD
+  S([Start]) --> A[FastAPI App Startup]
+  A --> B[app.main create_app]
+  B --> C[API Layer app/api]
+  B --> D[Core app/core]
+  C --> E[Service Wiring app/services]
+  E --> F[Graph Execution app/graphs]
+  F --> G[Provider Calls app/providers]
+  F --> H[Vector Retrieval app/vectordb]
+  G --> I[AI Response]
+  H --> I
+  I --> Z([End])
+```
+
 ## Subfolders
 
 - api/

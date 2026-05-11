@@ -1,30 +1,29 @@
-﻿```mermaid
-flowchart TD
-    A[Start: App Requests Vector Store] --> B[build_vector_store]
-    B --> C[_build_embedding_model]
-    C -->|Profile Exists| D[_build_embedding_model_from_profile]
-    C -->|Legacy Settings| E[_build_embedding_model_from_legacy_settings]
-    D --> F[EmbeddingModel\nOpenAICompatibleEmbeddingModel\nOllamaEmbeddingModel\nHashEmbeddingModel]
-    E --> F
-    F --> G[QdrantVectorStore]
-
-    %% Upsert flow
-    G -.-> H[upsert_documents]
-    H --> I[EmbeddingModel.embed]
-    I --> J[QdrantVectorStore._ensure_collection]
-    J --> K[Qdrant API: Upsert]
-    K --> L[End: Returns upserted count]
-
-    %% Search flow
-    G -.-> M[search]
-    M --> N[EmbeddingModel.embed]
-    N --> O[Qdrant API: Search]
-    O --> P[End: Returns RetrievedChunk list]
-```
-
-# app/vectordb
+﻿# app/vectordb
 
 Vector database abstractions, embedding backends, and Qdrant vector store implementation.
+
+## Folder Flow Chart
+
+```mermaid
+flowchart TD
+  S([Start]) --> A[App Requests Vector Store]
+  A --> B[build_vector_store]
+  B --> C[_build_embedding_model]
+  C --> D[_build_embedding_model_from_profile]
+  D --> E[EmbeddingModel\nOpenAICompatibleEmbeddingModel\nOllamaEmbeddingModel]
+  E --> F[QdrantVectorStore]
+
+  F -.-> G[upsert_documents]
+  G --> H[EmbeddingModel.embed]
+  H --> I[QdrantVectorStore._ensure_collection]
+  I --> J[Qdrant API Upsert]
+
+  F -.-> K[search]
+  K --> L[EmbeddingModel.embed]
+  L --> M[Qdrant API Search]
+  J --> Z([End])
+  M --> Z
+```
 
 ## Files
 
@@ -44,16 +43,6 @@ Embedding protocol and backends.
     - Input: text (str), text to embed.
     - Output: List of floats (embedding vector).
     - Doc: Protocol for embedding models.
-
-- **HashEmbeddingModel**
-  - `__init__(size: int)`
-    - Input: size (int), embedding vector size.
-    - Output: None
-    - Doc: Deterministic local embedding for development and tests.
-  - `async embed(text: str) -> list[float]`
-    - Input: text (str)
-    - Output: List of floats (embedding vector)
-    - Doc: Hashes text to a deterministic vector of given size.
 
 - **OpenAICompatibleEmbeddingModel**
   - `__init__(base_url, model, timeout_seconds, api_key_env, api_key_prefix, endpoint_path, extra_headers=None)`
@@ -88,17 +77,12 @@ Builds a QdrantVectorStore and embedding backend from settings/profile.
 - **_build_embedding_model(settings: Settings) -> EmbeddingModel**
   - Input: settings (Settings)
   - Output: EmbeddingModel instance
-  - Doc: Selects embedding model from profile or legacy config.
+  - Doc: Selects embedding model from the configured profile.
 
-- **_build_embedding_model_from_profile(profile: EmbeddingConfig, settings: Settings) -> EmbeddingModel**
-  - Input: profile (EmbeddingConfig), settings (Settings)
+- **_build_embedding_model_from_profile(profile: EmbeddingConfig) -> EmbeddingModel**
+  - Input: profile (EmbeddingConfig)
   - Output: EmbeddingModel instance
   - Doc: Instantiates embedding model from profile.
-
-- **_build_embedding_model_from_legacy_settings(settings: Settings) -> EmbeddingModel**
-  - Input: settings (Settings)
-  - Output: EmbeddingModel instance
-  - Doc: Instantiates embedding model from legacy config.
 
 ### qdrant.py
 Qdrant-backed vector store implementation.
@@ -135,7 +119,7 @@ Embedding profile schema and JSON loader.
 - **EmbeddingRegistry**
   - Pydantic model for embedding registry (list of EmbeddingConfig)
 
-- **_resolve_env_vars(value: Any) -> Any**
+- **resolve_env_vars(value: Any) -> Any**
   - Input: Any value (dict, list, str)
   - Output: Value with env vars resolved
   - Doc: Recursively resolves ${ENV} strings to environment values.

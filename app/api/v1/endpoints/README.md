@@ -2,6 +2,26 @@
 
 Version 1 endpoint handlers.
 
+## Folder Flow Chart
+
+```mermaid
+flowchart TD
+  S([Start]) --> A[HTTP Request]
+  A --> B{Endpoint Path}
+  B -->|/v1/health| C[health]
+  B -->|/v1/ai/providers| D[list_providers]
+  B -->|/v1/ai/invoke| E[invoke_ai]
+  B -->|/v1/ai/vector/upsert| F[upsert_vector_documents]
+  B -->|/v1/ai/vector/config| G[get_vector_runtime_config]
+  E --> H[AIOrchestrator]
+  F --> I[VectorStore and optional GraphStore]
+  C --> Z([End])
+  D --> Z
+  G --> Z
+  H --> Z
+  I --> Z
+```
+
 ## Files
 
 ### __init__.py

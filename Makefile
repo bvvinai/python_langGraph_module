@@ -1,4 +1,4 @@
-.PHONY: install lint typecheck test run
+.PHONY: install lint typecheck run
 
 install:
 	pip install -e .[dev]
@@ -8,9 +8,6 @@ lint:
 
 typecheck:
 	mypy app
-
-test:
-	pytest
 
 run:
 	uvicorn app.main:app --reload

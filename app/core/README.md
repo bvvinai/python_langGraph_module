@@ -2,6 +2,21 @@
 
 Core configuration, logging, and shared exceptions.
 
+## Folder Flow Chart
+
+```mermaid
+flowchart TD
+  S([Start]) --> A[Environment and .env]
+  A --> B[Settings model]
+  B --> C[get_settings cached singleton]
+  C --> D[Runtime consumers]
+  E[configure_logging] --> F[Structured JSON logs]
+  G[AppError and subclasses] --> H[FastAPI error handlers]
+  D --> Z([End])
+  F --> Z
+  H --> Z
+```
+
 ## Files
 
 ### __init__.py

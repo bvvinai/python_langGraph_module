@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import math
 import os
 from typing import Any, Protocol
 
@@ -10,30 +8,6 @@ import httpx
 
 class EmbeddingModel(Protocol):
     async def embed(self, text: str) -> list[float]: ...
-
-
-class HashEmbeddingModel:
-    """Deterministic local embedding for development and tests."""
-
-    def __init__(self, *, size: int) -> None:
-        if size <= 0:
-            raise ValueError("Embedding size must be greater than zero.")
-        self.size = size
-
-    async def embed(self, text: str) -> list[float]:
-        digest = hashlib.sha256(text.encode("utf-8")).digest()
-        vector = [0.0 for _ in range(self.size)]
-
-        for idx, byte in enumerate(digest):
-            slot = idx % self.size
-            centered = (byte - 127.5) / 127.5
-            vector[slot] += centered
-
-        norm = math.sqrt(sum(value * value for value in vector))
-        if norm == 0:
-            return vector
-
-        return [value / norm for value in vector]
 
 
 class OpenAICompatibleEmbeddingModel:
