@@ -12,6 +12,8 @@ from app.vectordb.embedding import (
 from app.vectordb.qdrant import QdrantVectorStore
 from app.vectordb.registry import EmbeddingConfig, load_embedding_registry
 
+__all__ = ["build_vector_store"]
+
 
 def build_vector_store(settings: Settings) -> QdrantVectorStore:
     embedding_model = _build_embedding_model(settings)
@@ -29,16 +31,23 @@ def _build_embedding_model(settings: Settings) -> EmbeddingModel:
     registry = load_embedding_registry(settings.embeddings_config_path)
     enabled = {item.name: item for item in registry.embeddings if item.enabled}
     profile = enabled.get(settings.embedding_profile)
-    if profile is not None:
-        return _build_embedding_model_from_profile(profile, settings)
-    return _build_embedding_model_from_legacy_settings(settings)
+    if profile is None:
+        raise RuntimeError(
+            f"Embedding profile '{settings.embedding_profile}' not found in registry "
+            f"'{settings.embeddings_config_path}'."
+        )
+    return _build_embedding_model_from_profile(profile)
 
 
-def _build_embedding_model_from_profile(profile: EmbeddingConfig, settings: Settings) -> EmbeddingModel:
+def _build_embedding_model_from_profile(profile: EmbeddingConfig) -> EmbeddingModel:
     if profile.type == "openai_compatible":
+        if not profile.base_url or not profile.model:
+            raise RuntimeError(
+                f"Profile '{profile.name}' of type 'openai_compatible' requires base_url and model."
+            )
         return OpenAICompatibleEmbeddingModel(
-            base_url=profile.base_url or settings.embedding_base_url,
-            model=profile.model or settings.embedding_model,
+            base_url=profile.base_url,
+            model=profile.model,
             timeout_seconds=profile.timeout_seconds,
             api_key_env=profile.api_key_env,
             api_key_prefix=profile.api_key_prefix,
@@ -47,36 +56,15 @@ def _build_embedding_model_from_profile(profile: EmbeddingConfig, settings: Sett
         )
 
     if profile.type == "ollama":
+        if not profile.base_url or not profile.model:
+            raise RuntimeError(
+                f"Profile '{profile.name}' of type 'ollama' requires base_url and model."
+            )
         return OllamaEmbeddingModel(
-            base_url=profile.base_url or settings.embedding_base_url,
-            model=profile.model or settings.embedding_model,
+            base_url=profile.base_url,
+            model=profile.model,
             timeout_seconds=profile.timeout_seconds,
             endpoint_path=profile.endpoint_path or "/api/embeddings",
         )
 
-    vector_size = profile.vector_size or settings.vector_embedding_size
-    return HashEmbeddingModel(size=vector_size)
-
-
-def _build_embedding_model_from_legacy_settings(settings: Settings) -> EmbeddingModel:
-    provider = settings.embedding_provider
-
-    if provider == "openai_compatible":
-        return OpenAICompatibleEmbeddingModel(
-            base_url=settings.embedding_base_url,
-            model=settings.embedding_model,
-            timeout_seconds=settings.embedding_timeout_seconds,
-            api_key_env=settings.embedding_api_key_env,
-            api_key_prefix=settings.embedding_api_key_prefix,
-            endpoint_path=settings.embedding_endpoint_path,
-        )
-
-    if provider == "ollama":
-        return OllamaEmbeddingModel(
-            base_url=settings.embedding_base_url,
-            model=settings.embedding_model,
-            timeout_seconds=settings.embedding_timeout_seconds,
-            endpoint_path=settings.embedding_endpoint_path,
-        )
-
-    return HashEmbeddingModel(size=settings.vector_embedding_size)
+    return HashEmbeddingModel(size=profile.vector_size or 256)

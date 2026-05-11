@@ -169,5 +169,5 @@ def test_vector_runtime_config_endpoint() -> None:
     assert "vector_db_provider" in body
     assert "embedding_profile" in body
     assert "available_embedding_profiles" in body
-    assert "embedding_provider" in body
-    assert "embedding_model" in body
+    assert "embedding_profile" in body
+    assert "available_embedding_profiles" in body

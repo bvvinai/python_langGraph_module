@@ -58,10 +58,6 @@ class VectorRuntimeConfigResponse(BaseModel):
     embeddings_config_path: str
     embedding_profile: str
     available_embedding_profiles: list[str]
-    embedding_provider: str
-    embedding_model: str
-    embedding_base_url: str
-    embedding_endpoint_path: str
 
 
 class HealthResponse(BaseModel):

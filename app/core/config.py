@@ -27,15 +27,6 @@ class Settings(BaseSettings):
     embeddings_config_path: str = Field(default="config/embeddings.json", alias="EMBEDDINGS_CONFIG_PATH")
     embedding_profile: str = Field(default="hash-local", alias="EMBEDDING_PROFILE")
 
-    # Legacy embedding settings are kept as a fallback if profile lookup fails.
-    embedding_provider: str = Field(default="hash", alias="EMBEDDING_PROVIDER")
-    embedding_model: str = Field(default="text-embedding-3-small", alias="EMBEDDING_MODEL")
-    embedding_base_url: str = Field(default="https://api.openai.com", alias="EMBEDDING_BASE_URL")
-    embedding_api_key_env: str | None = Field(default="OPENAI_API_KEY", alias="EMBEDDING_API_KEY_ENV")
-    embedding_api_key_prefix: str = Field(default="Bearer", alias="EMBEDDING_API_KEY_PREFIX")
-    embedding_endpoint_path: str = Field(default="/v1/embeddings", alias="EMBEDDING_ENDPOINT_PATH")
-    embedding_timeout_seconds: float = Field(default=15.0, alias="EMBEDDING_TIMEOUT_SECONDS")
-
     qdrant_url: str = Field(default="http://qdrant:6333", alias="QDRANT_URL")
     qdrant_api_key_env: str | None = Field(default="QDRANT_API_KEY", alias="QDRANT_API_KEY_ENV")
     qdrant_timeout_seconds: float = Field(default=10.0, alias="QDRANT_TIMEOUT_SECONDS")

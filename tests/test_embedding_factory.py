@@ -19,14 +19,6 @@ class FakeSettings:
     embeddings_config_path = ""
     embedding_profile = "hash-local"
 
-    embedding_provider = "hash"
-    embedding_model = "text-embedding-3-small"
-    embedding_base_url = "https://api.openai.com"
-    embedding_api_key_env = None
-    embedding_api_key_prefix = "Bearer"
-    embedding_endpoint_path = "/v1/embeddings"
-    embedding_timeout_seconds = 5.0
-
 
 def _write_embeddings_config(path: Path) -> None:
     payload = {
