@@ -55,12 +55,13 @@ def _build_embedding_model_from_profile(profile: EmbeddingConfig) -> EmbeddingMo
         )
 
     if profile.type == "ollama":
-        if not profile.base_url or not profile.model:
+        base_url = profile.base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        if not base_url or not profile.model:
             raise RuntimeError(
                 f"Profile '{profile.name}' of type 'ollama' requires base_url and model."
             )
         return OllamaEmbeddingModel(
-            base_url=profile.base_url,
+            base_url=base_url,
             model=profile.model,
             timeout_seconds=profile.timeout_seconds,
             endpoint_path=profile.endpoint_path or "/api/embeddings",

@@ -18,7 +18,16 @@ class QdrantVectorStore(VectorStore):
         distance: str,
         embedding_model: EmbeddingModel,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
+        normalized_base_url = base_url.strip()
+        if not normalized_base_url:
+            normalized_base_url = "http://localhost:6333"
+        if not normalized_base_url.startswith(("http://", "https://")):
+            normalized_base_url = f"http://{normalized_base_url}"
+
+        if normalized_base_url in {"http://", "https://"}:
+            normalized_base_url = "http://localhost:6333"
+
+        self.base_url = normalized_base_url.rstrip("/")
         self.timeout = httpx.Timeout(timeout_seconds)
         self.distance = distance
         self.embedding_model = embedding_model

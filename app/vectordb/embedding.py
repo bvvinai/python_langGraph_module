@@ -22,7 +22,11 @@ class OpenAICompatibleEmbeddingModel:
         endpoint_path: str,
         extra_headers: dict[str, str] | None = None,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
+        normalized_base_url = base_url.strip()
+        if not normalized_base_url.startswith(("http://", "https://")):
+            normalized_base_url = f"http://{normalized_base_url}"
+
+        self.base_url = normalized_base_url.rstrip("/")
         self.model = model
         self.timeout = httpx.Timeout(timeout_seconds)
         self.api_key_env = api_key_env
@@ -61,7 +65,11 @@ class OllamaEmbeddingModel:
         timeout_seconds: float,
         endpoint_path: str,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
+        normalized_base_url = base_url.strip()
+        if not normalized_base_url.startswith(("http://", "https://")):
+            normalized_base_url = f"http://{normalized_base_url}"
+
+        self.base_url = normalized_base_url.rstrip("/")
         self.model = model
         self.timeout = httpx.Timeout(timeout_seconds)
         self.endpoint_path = endpoint_path

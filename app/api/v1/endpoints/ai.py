@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, Form, UploadFile
 
 from app.core.config import get_settings
+from app.core.exceptions import AppError
 from app.domain.models import (
     AIInvokeRequest,
     AIInvokeResponse,
@@ -14,9 +15,10 @@ from app.domain.models import (
     VectorUpsertRequest,
     VectorUpsertResponse,
 )
-from app.domain.ports import VectorStore
+from app.domain.ports import VectorDocument, VectorStore
 from app.providers.factory import ProviderFactory
 from app.services.orchestrator import AIOrchestrator
+from app.services.file_parser import extract_text_from_uploaded_file
 from app.services.runtime import get_graph_store, get_orchestrator, get_provider_factory, get_vector_store
 from app.vectordb.registry import load_embedding_registry
 
@@ -49,7 +51,13 @@ async def upsert_vector_documents(
 ) -> VectorUpsertResponse:
     settings = get_settings()
     collection = request.collection or settings.vector_db_default_collection
-    upserted = await vector_store.upsert_documents(collection=collection, documents=request.documents)
+    try:
+        upserted = await vector_store.upsert_documents(collection=collection, documents=request.documents)
+    except Exception as exc:
+        raise AppError(
+            "Vector upsert failed. Check QDRANT_URL and ensure your vector DB is reachable.",
+            code="vector_upsert_failed",
+        ) from exc
 
     graph_store = get_graph_store()
     if graph_store is not None and request.documents:
@@ -60,6 +68,50 @@ async def upsert_vector_documents(
             logger.exception("graph_upsert_failed", extra={"collection": collection})
 
     return VectorUpsertResponse(collection=collection, upserted=upserted)
+
+
+@router.post("/vector/upload-file", response_model=VectorUpsertResponse)
+async def upload_vector_file(
+    file: UploadFile = File(...),
+    collection: str | None = Form(default=None),
+    vector_store: VectorStore = Depends(get_vector_store),
+) -> VectorUpsertResponse:
+    settings = get_settings()
+    target_collection = collection or settings.vector_db_default_collection
+
+    file_bytes = await file.read()
+    text, parser = extract_text_from_uploaded_file(filename=file.filename, content=file_bytes)
+
+    document = VectorDocument(
+        id=file.filename or None,
+        text=text,
+        metadata={
+            "filename": file.filename or "uploaded-file",
+            "content_type": file.content_type or "application/octet-stream",
+            "parser": parser,
+            "source": "upload",
+        },
+    )
+
+    try:
+        upserted = await vector_store.upsert_documents(
+            collection=target_collection,
+            documents=[document],
+        )
+    except Exception as exc:
+        raise AppError(
+            "Vector upsert failed. Check QDRANT_URL and ensure your vector DB is reachable.",
+            code="vector_upsert_failed",
+        ) from exc
+
+    graph_store = get_graph_store()
+    if graph_store is not None:
+        try:
+            await graph_store.upsert_documents(collection=target_collection, documents=[document])
+        except Exception:
+            logger.exception("graph_upsert_failed", extra={"collection": target_collection})
+
+    return VectorUpsertResponse(collection=target_collection, upserted=upserted)
 
 
 @router.get("/vector/config", response_model=VectorRuntimeConfigResponse)

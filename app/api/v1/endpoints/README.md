@@ -12,12 +12,13 @@ flowchart TD
   B -->|/v1/ai/providers| D[list_providers]
   B -->|/v1/ai/invoke| E[invoke_ai]
   B -->|/v1/ai/vector/upsert| F[upsert_vector_documents]
-  B -->|/v1/ai/vector/config| G[get_vector_runtime_config]
+  B -->|/v1/ai/vector/upload-file| G[upload_vector_file]
+  B -->|/v1/ai/vector/config| H[get_vector_runtime_config]
   E --> H[AIOrchestrator]
   F --> I[VectorStore and optional GraphStore]
+  G --> I
   C --> Z([End])
   D --> Z
-  G --> Z
   H --> Z
   I --> Z
 ```
@@ -58,6 +59,11 @@ AI invoke and vector endpoints.
   - Input: Vector upsert request and vector store dependency.
   - Output: VectorUpsertResponse with collection and upsert count.
   - Doc: Upserts documents into vector DB.
+
+- **upload_vector_file(file: UploadFile, collection: str | None, vector_store: VectorStore = Depends(get_vector_store)) -> VectorUpsertResponse**
+  - Input: Uploaded file (`.txt`, `.md`, `.docx`, `.pdf`), optional collection, and vector store dependency.
+  - Output: VectorUpsertResponse with collection and upsert count.
+  - Doc: Uploads one file via multipart/form-data, extracts text, and upserts it into vector DB.
 
 - **get_vector_runtime_config() -> VectorRuntimeConfigResponse**
   - Input: None.
