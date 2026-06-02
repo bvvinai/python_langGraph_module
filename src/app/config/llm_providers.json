@@ -1,0 +1,73 @@
+{
+  "default_provider": "openai_default",
+  "models": {
+    "openai_default": {
+      "enabled": false,
+      "backend": "openai",
+      "model": "gpt-4o-mini",
+      "api_key_env": "OPENAI_API_KEY",
+      "aliases": [
+        "openai",
+        "gpt"
+      ]
+    },
+    "openai_compatible_custom": {
+      "enabled": false,
+      "backend": "openai",
+      "model": "azure/genailab-maas-gpt-35-turbo",
+      "base_url": "https://your-openai-compatible-endpoint.example.com/v1",
+      "api_key_env": "AZURE_MAAS_API_KEY",
+      "aliases": [
+        "openai-compatible",
+        "azure-maas"
+      ]
+    },
+    "anthropic_default": {
+      "enabled": false,
+      "backend": "anthropic",
+      "model": "claude-3-5-haiku-latest",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "aliases": [
+        "anthropic",
+        "claude"
+      ]
+    },
+    "google_default": {
+      "enabled": false,
+      "backend": "google_genai",
+      "model": "gemini-1.5-flash",
+      "api_key_env": "GOOGLE_GENAI_API_KEY",
+      "aliases": [
+        "google",
+        "gemini"
+      ]
+    },
+    "mistral_default": {
+      "enabled": false,
+      "backend": "mistral",
+      "model": "mistral-small-latest",
+      "api_key_env": "MISTRAL_API_KEY",
+      "aliases": [
+        "mistral"
+      ]
+    },
+    "groq_default": {
+      "enabled": false,
+      "backend": "groq",
+      "model": "llama-3.1-8b-instant",
+      "api_key_env": "GROQ_API_KEY",
+      "aliases": [
+        "groq"
+      ]
+    },
+    "ollama_default": {
+      "enabled": true,
+      "backend": "ollama",
+      "model": "deepseek-r1:8b",
+      "aliases": [
+        "ollama",
+        "local"
+      ]
+    }
+  }
+}

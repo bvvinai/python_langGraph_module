@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package ai.backend.streaming.v1;
+
+message StreamEnvelope {
+  string session_id = 1;
+  string event_type = 2;
+  map<string, string> metadata = 3;
+  string text = 4;
+}
+
+service StreamService {
+  rpc StreamConversation(stream StreamEnvelope) returns (stream StreamEnvelope);
+}

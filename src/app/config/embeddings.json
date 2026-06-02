@@ -1,0 +1,60 @@
+{
+  "default_provider": "ollama_default",
+  "models": {
+    "openai_default": {
+      "enabled": true,
+      "backend": "openai",
+      "model": "text-embedding-3-small",
+      "api_key_env": "OPENAI_API_KEY",
+      "aliases": [
+        "openai"
+      ]
+    },
+    "openai_large": {
+      "enabled": true,
+      "backend": "openai",
+      "model": "text-embedding-3-large",
+      "api_key_env": "OPENAI_API_KEY",
+      "aliases": [
+        "openai-large"
+      ]
+    },
+    "openai_ada": {
+      "enabled": false,
+      "backend": "openai",
+      "model": "text-embedding-ada-002",
+      "api_key_env": "OPENAI_API_KEY",
+      "aliases": [
+        "openai-legacy"
+      ]
+    },
+    "ollama_default": {
+      "enabled": true,
+      "backend": "ollama",
+      "model": "nomic-embed-text",
+      "base_url": "http://localhost:11434",
+      "aliases": [
+        "ollama",
+        "local"
+      ]
+    },
+    "ollama_mxbai": {
+      "enabled": true,
+      "backend": "ollama",
+      "model": "mxbai-embed-large",
+      "base_url": "http://localhost:11434",
+      "aliases": [
+        "mxbai"
+      ]
+    },
+    "ollama_bge_m3": {
+      "enabled": false,
+      "backend": "ollama",
+      "model": "bge-m3",
+      "base_url": "http://localhost:11434",
+      "aliases": [
+        "bge"
+      ]
+    }
+  }
+}
