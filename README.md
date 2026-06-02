@@ -1,260 +1,183 @@
-# LangGraph + FastAPI Production Starter
+# LangGraph AI Backend (Pluggable)
 
-Provider-agnostic FastAPI and LangGraph starter for building production-ready AI APIs with pluggable providers and vector retrieval.
+A reusable backend-first architecture for AI applications with:
 
-## Overview
+- LangGraph runtime (Agent, RAG, GraphRAG modes)
+- Pluggable LLM and embedding providers
+- Pluggable Vector DB and Graph DB adapters
+- File ingestion pipeline with multiple loaders
+- REST and WebSocket streaming API (gRPC contract included)
 
-### Architecture Highlights
+## Current Implementation Scope
 
-- Provider-agnostic design via `LLMProvider` protocol and provider registry.
-- LangGraph orchestration with explicit node boundaries.
-- FastAPI API layer separated from orchestration and provider adapters.
-- Extensible modules for providers, graph nodes, and vector DB backends.
+This initial implementation provides:
 
-### Project Structure
+- Project scaffold and module boundaries
+- Provider interfaces and centralized provider manager
+- JSON-driven LLM model profile registry (backend + model + aliases)
+- JSON-driven embedding model profile registry (backend + model + aliases)
+- OpenAI, Anthropic, Google GenAI, Mistral, Groq, and Ollama LLM adapters
+- OpenAI and Ollama embedding adapters
+- Qdrant, Chroma, and Neo4j adapter scaffolds
+- Basic graph runner and API endpoints
+- WebSocket bidirectional stream endpoint
+- Ingestion pipeline skeleton with multi-format loaders
 
-```text
-app/
-  api/
-  core/
-  domain/
-  graphs/
-  providers/
-  services/
-  vectordb/
-config/
-  providers.json
-  embeddings.json
+## Architecture Diagram
+
+```mermaid
+flowchart TB
+      client[Client Apps and SDKs]
+
+      subgraph API[FastAPI Service src/app/main.py]
+         rest["REST /v1/invoke and /v1/ingest endpoints"]
+         ws["WebSocket /v1/stream"]
+         meta["/health and /capabilities"]
+      end
+
+      subgraph Runtime[Execution Runtime]
+         graphrt[GraphRuntime]
+         modelrouter[ModelRouter]
+         embrouter[EmbeddingRouter]
+         ingest[IngestionPipeline]
+         version[VersionStore]
+      end
+
+      subgraph Processing[Document Processing]
+         loaders[LoaderRegistry]
+         chunker[SlidingWindowChunker]
+      end
+
+      subgraph Providers[Provider Layer]
+         pm[ProviderManager]
+         llmconf[Model Profiles src/app/config/llm_providers.json]
+         embconf[Embedding Profiles src/app/config/embeddings.json]
+         llm[LLM Providers OpenAI Anthropic GoogleGenAI Mistral Groq Ollama]
+         emb[Embedding Providers OpenAI Ollama]
+         vdb[Vector Store Qdrant Chroma]
+         gdb[Graph Store Neo4j]
+      end
+
+      settings[Settings and API keys from .env]
+
+      client --> rest
+      client --> ws
+      client --> meta
+
+      rest --> graphrt
+      rest --> ingest
+      ws --> graphrt
+
+      graphrt --> modelrouter
+      graphrt --> embrouter
+      graphrt --> pm
+
+      ingest --> loaders
+      ingest --> chunker
+      ingest --> embrouter
+      ingest --> version
+      ingest --> pm
+
+      modelrouter --> llmconf
+      embrouter --> embconf
+      pm --> llmconf
+      pm --> embconf
+      pm --> llm
+      pm --> emb
+      pm --> vdb
+      pm --> gdb
+
+      settings --> pm
+      settings --> ingest
 ```
 
 ## Quick Start
 
-### 1. Create environment and install dependencies
+### Windows PowerShell (manual)
+
+1. Create and activate a virtual environment:
+
+   ```powershell
+   python -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   ```
+
+2. Install dependencies:
+
+   ```powershell
+   python -m pip install --upgrade pip
+   python -m pip install -e .
+   ```
+
+3. Copy environment template:
+
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+4. Configure required keys and services in .env (for Neo4j graph mode, set `NEO4J_PASSWORD`).
+5. Run the server:
+
+   ```powershell
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+### macOS / Linux
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -e .[dev]
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e .
+cp .env.example .env
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 2. Configure environment
+### Run Without APIs
 
-```bash
-copy .env.example .env
+You can use the runtime without mounting REST or WebSocket routes.
+
+```python
+from app.main import create_app
+
+app = create_app(include_rest=False, include_websocket=False, include_meta_routes=False)
 ```
 
-Edit `.env` values as needed.
+You can also use the root container directly (no FastAPI app required).
 
-### 3. Run API
+```python
+from app.container import get_container
 
-```bash
-uvicorn app.main:app --reload
+container = get_container()
+result = await container.graph_runtime.invoke({"query": "Hello", "mode": "agent"})
 ```
 
-### 4. Open API docs
+## API
 
-- `http://127.0.0.1:8000/docs`
+- GET /health
+- GET /capabilities
+- POST /v1/invoke
+- POST /v1/ingest/upload
+- GET /v1/ingest/jobs/{job_id}
+- WS /v1/stream
 
-## Provider Configuration
+## Notes
 
-
-## Folder Flow Chart
-
-Below is a comprehensive flow diagram showing how all major modules, functions, and workflows are interrelated in this project:
-
-```mermaid
-flowchart TD
-  S([Start])
-  Z([End])
-  subgraph API Layer
-    A1[FastAPI app.main]
-    A2[API Router app/api/v1/router.py]
-    A3[AI Endpoint /ai app/api/v1/endpoints/ai.py]
-    A4[Health Endpoint /health]
-  end
-  subgraph Service Layer
-    S1[Orchestrator app/services/orchestrator.py]
-    S2[Runtime Providers app/services/runtime.py]
-  end
-  subgraph Graph Layer
-    G1[Graph Runner app/graphs/builder.py]
-    G2[Graph Nodes app/graphs/nodes.py]
-    G3[Graph State app/graphs/state.py]
-  end
-  subgraph Providers
-    P1[Provider Factory app/providers/factory.py]
-    P2[Base Provider app/providers/base.py]
-    P3[Anthropic, OpenAI, Ollama, etc.]
-  end
-  subgraph VectorDB
-    V1[Vector Store Factory app/vectordb/factory.py]
-    V2[Qdrant Vector Store]
-  end
-  subgraph GraphDB
-    D1[Graph Store Factory app/graphdb/factory.py]
-    D2[Neo4j Graph Store]
-  end
-  subgraph Domain Models
-    M1[AIInvokeRequest, AIInvokeResponse, etc.]
-    M2[Ports: LLMProvider, VectorStore, GraphStore]
-  end
-  S --> A1
-  %% API Flow
-  A1 --> A2
-  A2 --> A3
-  A3 -->|invoke_ai| S1
-  A3 -->|list_providers| P1
-  S1 -->|invoke| G1
-  S1 -->|get_provider_factory| P1
-  S1 -->|get_vector_store| V1
-  S1 -->|get_graph_store| D1
-  G1 --> G2
-  G1 --> G3
-  G2 -->|prepare, retrieve_context, call_model, finalize| G3
-  G2 -->|call_model| P1
-  G2 -->|retrieve_context| V1
-  G2 -->|graph_rag| D1
-  P1 --> P2
-  P1 --> P3
-  V1 --> V2
-  D1 --> D2
-  %% Models
-  A3 --> M1
-  S1 --> M1
-  G1 --> M1
-  G2 --> M1
-  P2 --> M2
-  V1 --> M2
-  D1 --> M2
-  %% Data Flow
-  M1 -.->|input| A3
-  G2 -.->|output| M1
-  A4 --> Z
-  M1 --> Z
-    
-```
-
-Provider definitions are loaded from `config/providers.json`.
-
-### Supported provider types
-
-- `anthropic`: Anthropic Messages API (`/v1/messages`).
-- `openai_compatible`: OpenAI-style chat completions (`/v1/chat/completions`).
-- `ollama`: Ollama chat API (`/api/chat`).
-
-Config files support environment placeholders such as `${ANTHROPIC_BASE_URL}`, `${OPENAI_BASE_URL}`, and `${OLLAMA_BASE_URL}`.
-
-### Add or change providers
-
-1. Add or edit provider entries in `config/providers.json`.
-2. Set required API key environment variables.
-3. Optionally add a dedicated adapter class if the API is not OpenAI-compatible.
-
-## API Usage
-
-### List providers
-
-```bash
-curl "http://127.0.0.1:8000/v1/ai/providers"
-```
-
-### Invoke model
-
-```bash
-curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input": "Summarize LangGraph in one line.",
-    "system_prompt": "You are concise.",
-    "provider": "openai"
-  }'
-```
-
-Change `provider` to switch backends per request.
-
-Set global default provider in `.env` via `DEFAULT_PROVIDER`.
-
-## Vector DB Integration (Qdrant)
-
-Workflow with retrieval:
-
-`prepare -> retrieve_context -> call_model -> finalize`
-
-### Run with Docker Compose
-
-```bash
-docker compose up --build
-```
-
-### Upsert documents
-
-```bash
-curl -X POST "http://127.0.0.1:8000/v1/ai/vector/upsert" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "collection": "knowledge_base",
-    "documents": [
-      {
-        "id": "doc-1",
-        "text": "LangGraph is used to build stateful LLM workflows.",
-        "metadata": {"source": "docs"}
-      }
-    ]
-  }'
-```
-
-### Read runtime vector and embedding config
-
-```bash
-curl "http://127.0.0.1:8000/v1/ai/vector/config"
-```
-
-### Invoke with retrieval enabled
-
-```bash
-curl -X POST "http://127.0.0.1:8000/v1/ai/invoke" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input": "What is LangGraph used for?",
-    "provider": "openai",
-    "retrieval": {
-      "enabled": true,
-      "collection": "knowledge_base",
-      "top_k": 3
-    }
-  }'
-```
-
-### Vector settings
-
-- `VECTOR_DB_ENABLED=true`
-- `VECTOR_DB_PROVIDER=qdrant`
-- `VECTOR_DB_DEFAULT_COLLECTION=knowledge_base`
-- `QDRANT_URL=http://qdrant:6333`
-
-## Embedding Configuration
-
-Embedding profiles are loaded from `config/embeddings.json`.
-
-### Key environment values
-
-- `EMBEDDINGS_CONFIG_PATH=config/embeddings.json`
-- `EMBEDDING_PROFILE=ollama-nomic-embed-text`
-
-### Included profiles
-
-- `openai-text-embedding-3-small`
-- `openai-text-embedding-3-large`
-- `ollama-nomic-embed-text`
-- `ollama-mxbai-embed-large`
-
-Switch embedding behavior by changing only `EMBEDDING_PROFILE`.
-
-Legacy env-based embedding values remain available as fallback if profile lookup fails.
-
-## Production Notes
-
-- Add authN/authZ middleware in `app/main.py`.
-- Add tracing and metrics integration in middleware.
-- Deploy behind production ASGI setup (for example gunicorn with uvicorn workers).
-- Add CI checks for lint and type checks.
+- WebSocket streaming is implemented in v1.
+- gRPC contract file is included and can be enabled in phase 2.
+- LLM model profiles are loaded from `src/app/config/llm_providers.json`.
+- Embedding model profiles are loaded from `src/app/config/embeddings.json`.
+- LLM profile defaults and enablement are controlled in JSON (`default_provider` + each model `enabled`) instead of environment flags.
+- Embedding profile defaults and model selection are controlled in JSON (`default_provider` + each model `enabled`).
+- Each profile can define `backend`, `model`, `enabled`, `aliases`, optional `base_url`, and optional `api_key_env`; adding or removing a model is done by editing this JSON.
+- `base_url` overrides are currently supported for `openai`, `anthropic`, and `ollama` backends.
+- Environment should contain API key variables and service credentials; map each model profile to its key variable through `api_key_env`.
+- If `ENABLE_GRAPHDB=true`, set `NEO4J_PASSWORD` in environment configuration.
+- Request `provider` can be a profile key (for example `openai_default`) or any configured alias.
+- LLM choice precedence: explicit request provider/profile -> configured default profile.
+- Optional: set `LLM_PROVIDER_CONFIG_PATH` (or `LLM_MODEL_CONFIG_PATH`) to use a different model profile JSON file.
+- Optional: set `EMBEDDING_PROVIDER_CONFIG_PATH` (or `EMBEDDING_MODEL_CONFIG_PATH`) to use a different embedding profile JSON file.
+- Vector DB backends available: `qdrant`, `chroma`.
+- Exactly one vector backend is active globally via `DEFAULT_VECTOR_STORE` in environment config.
+- API payloads do not allow per-request vector backend override.
+- Provider calls require valid credentials and reachable external services.

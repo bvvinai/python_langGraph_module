@@ -1,25 +1,19 @@
-# Python
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 *.so
+*.dll
 *.egg-info/
-.eggs/
-.venv/
-venv/
-
-# Tooling
+.dist/
+.build/
+.pytest_cache/
 .mypy_cache/
 .ruff_cache/
-
-# IDE
-.vscode/
-.idea/
-
-# Environment
+.venv/
+venv/
 .env
-
-# Build artifacts
-dist/
-build/
+.coverage
+htmlcov/
+*.log
+/.chroma
